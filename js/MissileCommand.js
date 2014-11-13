@@ -20,13 +20,22 @@ function generateEnemy() {
     var endX = Math.floor((Math.random() * width));
     var endY = height;
 
-    /*var context = gameArea.getContext('2d');
-    
-    context.moveTo(X, Y);
-    context.lineTo(endX, endY);
-    context.stroke();*/
-
     var temp = new Missile({x: X, y: Y}, {x: endX, y: endY}, 1);
+    
+    return temp;
+};
+
+function generateAlly() {
+    var width = gameArea.offsetWidth;
+    var height = gameArea.offsetHeight;
+    
+    var X = Math.floor((Math.random() * width));
+    var Y = 0;
+    
+    var endX = Math.floor((Math.random() * width));
+    var endY = height;
+
+    var temp = new Rocket({x: X, y: Y}, {x: endX, y: endY}, 1);
     
     return temp;
 };
@@ -69,37 +78,78 @@ Missile.prototype.hasHit = function() {
     };
 };
 
+var Rocket = function(orig, target, speed) {
+    this.start = {x: orig.x, y: orig.y};
+    this.cur = {x: orig.x, y: orig.y};
+    this.target = {x: target.x, y: target.y};
+    this.magnitude = 0;
+    this.speed = speed;
+
+    this.angle = Math.atan((target.x - this.start.x)/(target.y - this.start.y));
+};
+
+Rocket.prototype.draw = function(ctx) {
+    ctx.beginPath();
+    ctx.moveTo(this.start.x, this.start.y);
+    ctx.lineTo(Math.floor(this.cur.x), Math.floor(this.cur.y));
+    ctx.stroke();
+};
+
+Rocket.prototype.drawAll = function(ctx) {
+    ctx.moveTo(this.start.x, this.start.y);
+    ctx.lineTo(this.target.x, this.target.y);
+    ctx.stroke();
+};
+
+Rocket.prototype.move = function() {
+    this.magnitude += this.speed;   
+    this.cur.x = (this.magnitude * Math.sin(this.angle)) + this.start.x;
+    this.cur.y = (this.magnitude * Math.cos(this.angle)) + this.start.y;
+};
+
+Rocket.prototype.hasHit = function() {
+    if (this.cur.y >= this.target.y) {
+        return true; 
+    }
+    else {
+        return false;
+    };
+};
+
 var Turret = function() {
-    this.x = gameArea.offsetWidth / 2;
-    this.y = gameArea.offsetHeight;
+    this.center = {x: gameArea.offsetWidth / 2, y: gameArea.offsetHeight};
     
     this.radius = 15;
     this.length = 25;
-    this.aimX = gameArea.offsetWidth / 2;
-    this.aimY = gameArea.offsetHeight - 10;
+    this.aim = {x: gameArea.offsetWidth / 2, y: gameArea.offsetHeight - 10};
     
-    alert(this.x + ',' + this.y + '\n' + this.aimX + ',' + this.aimY);
+    this.angle = Math.atan((this.aim.x - this.center.x)/(this.aim.y - this.center.y )) + Math.PI;
+    
+    this.base= {x: (this.radius * Math.sin(this.angle)) + this.center.x, y: (this.radius * Math.cos(this.angle)) + this.center.y};
+    
+    this.tip = {x: (this.length * Math.sin(this.angle)) + this.center.x, y: (this.length * Math.cos(this.angle)) + this.center.y};
+    
 };
 
 Turret.prototype.draw = function(ctx) {
     ctx.beginPath();
     
-    this.x = gameArea.offsetWidth / 2;
-    this.y = gameArea.offsetHeight;
+    this.center.x = gameArea.offsetWidth / 2;
+    this.center.y = gameArea.offsetHeight;
     
-    this.angle = Math.atan((this.aimX - this.x)/(this.aimY - this.y )) + Math.PI;
+    this.angle = Math.atan((this.aim.x - this.center.x)/(this.aim.y - this.center.y )) + Math.PI;
     
-    var baseX = (this.radius * Math.sin(this.angle)) + this.x;
-    var baseY = (this.radius * Math.cos(this.angle)) + this.y;
+    this.base.x = (this.radius * Math.sin(this.angle)) + this.center.x;
+    this.base.y = (this.radius * Math.cos(this.angle)) + this.center.y;
     
-    var tipX = (this.length * Math.sin(this.angle)) + this.x;
-    var tipY = (this.length * Math.cos(this.angle)) + this.y;
+    this.tip.x = (this.length * Math.sin(this.angle)) + this.center.x;
+    this.tip.y = (this.length * Math.cos(this.angle)) + this.center.y;
     
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI, true); 
+    ctx.arc(this.center.x, this.center.y, this.radius, 0, Math.PI, true); 
     
-    ctx.moveTo(baseX, baseY);
-    ctx.lineTo(tipX, tipY);
+    ctx.moveTo(this.base.x, this.base.y);
+    ctx.lineTo(this.tip.x, this.tip.y);
     ctx.stroke();
 };
 
@@ -108,6 +158,8 @@ var gameEngine = (function() {
         timeBetweenMissiles = 3000,
         timeBetweenCount = 3000,
         enemies = [],
+        enemyCount = 2,
+        intervalVar,
         turret;
     
     function moveTurret(){
@@ -115,8 +167,11 @@ var gameEngine = (function() {
     };
     
     function aimTurret(pos){
-        turret.aimX = pos.x;
-        turret.aimY = pos.y;
+        turret.aim.x = pos.x;
+        turret.aim.y = pos.y;
+    };
+    
+    function fireRocket(pos){
     };
     
     function main() {
@@ -129,9 +184,10 @@ var gameEngine = (function() {
             turret = new Turret();
         };
         
-        if (enemies.length < 5 && timeBetweenCount < 0) {
+        if (enemyCount > 0 && timeBetweenCount < 0) {
             enemies.push(generateEnemy());
             timeBetweenCount += timeBetweenMissiles;
+            enemyCount--;
         }
         
         for(var i = 0; i < enemies.length; i++) {
@@ -140,14 +196,25 @@ var gameEngine = (function() {
             entry.draw(context);
             if(entry.hasHit()){
                 var index = enemies.indexOf(entry);
+                delete enemies[index];
                 enemies.splice(index, 1);
             }
         }
+        
         turret.draw(context);
+        
+        if (enemyCount == 0 && enemies.length == 0) {
+            context.clearRect(0, 0, gameArea.width, gameArea.height);
+            stop();
+        }
     };
         
     function start() {
-        setInterval(main, refreshRate);
+        intervalVar = setInterval(main, refreshRate);
+    };
+    
+    function stop() {
+        clearInterval(intervalVar);
     };
     
     return {
@@ -168,22 +235,12 @@ window.onresize = function() {
 
 gameArea.addEventListener('click', function(evt) {
     var mousePos = getMousePos(gameArea, evt);
-    //var context = gameArea.getContext('2d');
+
+    var test = generateAlly();
     
-    //context.clearRect(0, 0, gameArea.width, gameArea.height);
-    
-    /*var x = gameArea.offsetWidth / 2;
-    var y = gameArea.offsetHeight / 2;
-    
-    context.beginPath();
-    context.arc(x, y, 50, 0, 2 * Math.PI, true);
-    
-    context.moveTo(x, y);
-    context.lineTo(x + 50, y);
-    
-    context.stroke();*/
-    
-    //gameEngine.fireRocket(mousePos);
+    //test.move();
+    //test.draw();
+    gameEngine.fireRocket(mousePos);
 }, true);
 
 gameArea.addEventListener('mousemove', function(evt) {
