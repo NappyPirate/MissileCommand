@@ -84,36 +84,37 @@ var Rocket = function(orig, target, speed) {
     this.target = {x: target.x, y: target.y};
     this.magnitude = 0;
     this.speed = speed;
+    this.explosionRadius = gameArea.width / 40;
 
-    this.angle = Math.atan((target.x - this.start.x)/(target.y - this.start.y));
+    this.angle = Math.atan((target.x - this.start.x)/(target.y - this.start.y)) + Math.PI;
 };
 
 Rocket.prototype.draw = function(ctx) {
-    ctx.beginPath();
-    ctx.moveTo(this.start.x, this.start.y);
-    ctx.lineTo(Math.floor(this.cur.x), Math.floor(this.cur.y));
-    ctx.stroke();
+    
 };
 
 Rocket.prototype.drawAll = function(ctx) {
+    ctx.beginPath();
     ctx.moveTo(this.start.x, this.start.y);
     ctx.lineTo(this.target.x, this.target.y);
     ctx.stroke();
+    
+    ctx.beginPath()
+    ctx.arc(this.target.x, this.target.y, this.explosionRadius, 0, 2 * Math.PI, false);
+    ctx.fill();
+    ctx.stroke();
+    
 };
 
 Rocket.prototype.move = function() {
     this.magnitude += this.speed;   
     this.cur.x = (this.magnitude * Math.sin(this.angle)) + this.start.x;
     this.cur.y = (this.magnitude * Math.cos(this.angle)) + this.start.y;
+    
 };
 
 Rocket.prototype.hasHit = function() {
-    if (this.cur.y >= this.target.y) {
-        return true; 
-    }
-    else {
-        return false;
-    };
+    
 };
 
 var Turret = function() {
@@ -158,7 +159,8 @@ var gameEngine = (function() {
         timeBetweenMissiles = 3000,
         timeBetweenCount = 3000,
         enemies = [],
-        enemyCount = 2,
+        rockets = [],
+        enemyCount = 0,
         intervalVar,
         turret;
     
@@ -172,6 +174,7 @@ var gameEngine = (function() {
     };
     
     function fireRocket(pos){
+        rockets.push(new Rocket(turret.tip, pos, 1));
     };
     
     function main() {
@@ -201,11 +204,16 @@ var gameEngine = (function() {
             }
         }
         
+        for(var j = 0; j < rockets.length; j++) {
+            var entry = rockets[j];
+            entry.drawAll(context);
+        }
+        
         turret.draw(context);
         
         if (enemyCount == 0 && enemies.length == 0) {
-            context.clearRect(0, 0, gameArea.width, gameArea.height);
-            stop();
+            //context.clearRect(0, 0, gameArea.width, gameArea.height);
+            //stop();
         }
     };
         
@@ -221,7 +229,8 @@ var gameEngine = (function() {
             'start': start,
             'main': main,
             'moveTurret': moveTurret,
-            'aimTurret': aimTurret
+            'aimTurret': aimTurret,
+            'fireRocket': fireRocket
         };
 }());
 
