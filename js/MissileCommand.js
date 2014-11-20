@@ -81,16 +81,26 @@ Missile.prototype.hasHit = function() {
 var Rocket = function(orig, target, speed) {
     this.start = {x: orig.x, y: orig.y};
     this.cur = {x: orig.x, y: orig.y};
+    this.base = {x: orig.x, y: orig.y};
     this.target = {x: target.x, y: target.y};
     this.magnitude = 0;
     this.speed = speed;
     this.explosionRadius = gameArea.width / 40;
+    this.radius = 0;
 
     this.angle = Math.atan((target.x - this.start.x)/(target.y - this.start.y)) + Math.PI;
 };
 
 Rocket.prototype.draw = function(ctx) {
-    
+    ctx.beginPath();
+    ctx.moveTo(this.base.x, this.base.y);
+    ctx.lineTo(this.cur.x, this.cur.y);   
+    ctx.stroke();
+
+    ctx.beginPath()
+    ctx.arc(this.target.x, this.target.y, this.radius, 0, 2 * Math.PI, false);
+    ctx.fill();
+    ctx.stroke();
 };
 
 Rocket.prototype.drawAll = function(ctx) {
@@ -107,14 +117,37 @@ Rocket.prototype.drawAll = function(ctx) {
 };
 
 Rocket.prototype.move = function() {
-    this.magnitude += this.speed;   
-    this.cur.x = (this.magnitude * Math.sin(this.angle)) + this.start.x;
-    this.cur.y = (this.magnitude * Math.cos(this.angle)) + this.start.y;
-    
+    if (this.cur.y > this.target.y){
+        this.magnitude += this.speed;   
+        this.cur.x = (this.magnitude * Math.sin(this.angle)) + this.start.x;
+        this.cur.y = (this.magnitude * Math.cos(this.angle)) + this.start.y;
+        this.base.x = ((this.magnitude - 3) * Math.sin(this.angle)) + this.start.x;
+        this.base.y = ((this.magnitude - 3) * Math.cos(this.angle)) + this.start.y;
+    }
+    if (this.cur.y < this.target.y){
+        this.cur.x = this.target.x;
+        this.cur.y = this.target.y;
+    }
+    if ((this.cur.x == this.target.x && this.cur.y == this.target.y) && this.radius < this.explosionRadius){
+        this.radius += this.speed;
+        if (this.radius > this.explosionRadius)
+        {
+            this.radius = this.explosionRadius;
+        }
+    }
 };
 
 Rocket.prototype.hasHit = function() {
     
+};
+
+Rocket.prototype.hasExploded = function() {
+    if(this.radius == this.explosionRadius){
+        return true;
+    }
+    else {
+        return false;
+    }
 };
 
 var Turret = function() {
@@ -206,7 +239,13 @@ var gameEngine = (function() {
         
         for(var j = 0; j < rockets.length; j++) {
             var entry = rockets[j];
-            entry.drawAll(context);
+            entry.move();
+            entry.draw(context);
+            if(entry.hasExploded()){
+                var index = rockets.indexOf(entry);
+                delete enemies[index];
+                rockets.splice(index, 1);
+            }
         }
         
         turret.draw(context);
