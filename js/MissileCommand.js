@@ -1,5 +1,5 @@
 var gameArea = document.getElementById('game_area');
-gameArea.width = window.innerWidth - 17;
+gameArea.width = window.innerWidth - 18;
 gameArea.height = window.innerHeight - 92;
 
 function getMousePos(canvas, evt) {
@@ -85,6 +85,7 @@ var Rocket = function(orig, target, speed) {
     this.target = {x: target.x, y: target.y};
     this.magnitude = 0;
     this.speed = speed;
+	this.explosionSpeed = 1;
     this.explosionRadius = gameArea.width / 40;
     this.radius = 0;
 
@@ -129,7 +130,7 @@ Rocket.prototype.move = function() {
         this.cur.y = this.target.y;
     }
     if ((this.cur.x == this.target.x && this.cur.y == this.target.y) && this.radius < this.explosionRadius){
-        this.radius += this.speed;
+        this.radius += this.explosionSpeed;
         if (this.radius > this.explosionRadius)
         {
             this.radius = this.explosionRadius;
@@ -193,7 +194,7 @@ var gameEngine = (function() {
         timeBetweenCount = 3000,
         enemies = [],
         rockets = [],
-        enemyCount = 0,
+        enemyCount = 5,
         intervalVar,
         turret;
     
@@ -207,7 +208,7 @@ var gameEngine = (function() {
     };
     
     function fireRocket(pos){
-        rockets.push(new Rocket(turret.tip, pos, 1));
+        rockets.push(new Rocket(turret.tip, pos, 4));
     };
     
     function main() {
@@ -226,35 +227,57 @@ var gameEngine = (function() {
             enemyCount--;
         }
         
-        for(var i = 0; i < enemies.length; i++) {
+		var i = enemies.length;
+        while(i--) {
             var entry = enemies[i];
             entry.move();
             entry.draw(context);
             if(entry.hasHit()){
-                var index = enemies.indexOf(entry);
-                delete enemies[index];
-                enemies.splice(index, 1);
+                enemies.splice(i, 1);
             }
         }
         
-        for(var j = 0; j < rockets.length; j++) {
+		var j = rockets.length;
+        while(j--) {
             var entry = rockets[j];
             entry.move();
             entry.draw(context);
             if(entry.hasExploded()){
-                var index = rockets.indexOf(entry);
-                delete enemies[index];
-                rockets.splice(index, 1);
+                rockets.splice(j, 1);
             }
         }
         
         turret.draw(context);
+		
+		detectCollisions();
         
         if (enemyCount == 0 && enemies.length == 0) {
             //context.clearRect(0, 0, gameArea.width, gameArea.height);
             //stop();
         }
     };
+
+	function detectCollisions()
+	{
+		var r = rockets.length;
+		while(r--) {
+			if(rockets[r].cur.x == rockets[r].target.x && rockets[r].cur.y == rockets[r].target.y){
+				var m = enemies.length;
+				while(m--) {
+					var rocket = rockets[r];
+					var missile = enemies[m];
+
+					var deltaX = rocket.cur.x - missile.cur.x;
+					var deltaY = rocket.cur.y - missile.cur.y;
+					var distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+					if (distance < rocket.radius){
+						enemies.splice(m, 1);
+					}
+				}
+			}
+		}
+	};
         
     function start() {
         intervalVar = setInterval(main, refreshRate);
