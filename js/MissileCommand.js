@@ -149,7 +149,7 @@ Turret.prototype.draw = function(ctx) {
 
 var gameEngine = (function() {
     var refreshRate = 25,
-        timeBetweenMissiles ,
+        timeBetweenMissiles,
         timeCount,
         missiles = [],
         rockets = [],
@@ -157,6 +157,7 @@ var gameEngine = (function() {
         enemySpeed = 0,
         intervalVar,
         playerHealth,
+        ammunition,
         score = 0,
         turret,
         wave = 0;
@@ -185,6 +186,7 @@ var gameEngine = (function() {
             entry.draw(context);
             if(entry.hasHit()){
                 missiles.splice(i, 1);
+                playerHealth--;
             }
         }
         
@@ -201,6 +203,11 @@ var gameEngine = (function() {
         turret.draw(context);
 
         detectCollisions();
+        if (playerHealth <= 0)
+        {
+            stop();
+            setTimeout(function(){gameover(context);}, 1000);
+        }
         
         if (enemyCount == 0 && missiles.length == 0) {
             newWave();
@@ -229,6 +236,35 @@ var gameEngine = (function() {
             }
         }
     };
+
+    function gameover(ctx)
+    {
+        ctx.beginPath();
+        ctx.fillRect(0, 0, gameArea.width, gameArea.height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.fillStyle="#FFFFFF";
+        ctx.font="20px Arial";
+        ctx.fillText("Game Over", gameArea.width / 2 - 38, gameArea.height / 2 + 8);
+        ctx.stroke();
+
+        setTimeout(function() {displayScore(ctx)}, 2000);
+    }
+
+    function displayScore(ctx)
+    {
+        ctx.beginPath();
+        ctx.fillStyle="#000000"
+        ctx.fillRect(0, 0, gameArea.width, gameArea.height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.fillStyle="#FFFFFF"
+        ctx.font="20px Arial";
+        ctx.fillText("Score: " + score, gameArea.width / 2 - 38, gameArea.height / 2 + 8);
+        ctx.stroke();
+    }
     
     function generateEnemy() {
         var width = gameArea.offsetWidth;
@@ -262,6 +298,7 @@ var gameEngine = (function() {
         missiles = [];
         rockets = [];
         playerHealth = 3;
+        ammunition = enemyCount * 3;
 
         var context = gameArea.getContext('2d');
         context.clearRect(0, 0, gameArea.width, gameArea.height);
@@ -275,7 +312,7 @@ var gameEngine = (function() {
         setTimeout(start, 3000);
     };
     
-    function resetWave() {
+    function resetWave(num) {
         
     };
     
@@ -283,6 +320,16 @@ var gameEngine = (function() {
         ctx.beginPath();
         ctx.font="10px Arial";
         ctx.fillText("Score: " + score, 5, 10);
+        ctx.stroke();
+    };
+
+    function drawHealth(ctx){
+        ctx.beginPath();
+        ctx.stroke();
+    };
+
+    function drawAmmunition(ctx){
+        ctx.beginPath();
         ctx.stroke();
     };
     
@@ -296,7 +343,10 @@ var gameEngine = (function() {
     };
     
     function fireRocket(pos){
-        rockets.push(new Rocket(turret.tip, pos, 4));
+        if(ammunition > 0)
+        {
+            rockets.push(new Rocket(turret.tip, pos, 4));
+        }
     };
     
     return {
