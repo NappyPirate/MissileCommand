@@ -165,7 +165,6 @@ var gameEngine = (function() {
     function main() {
         var context = gameArea.getContext('2d');
         context.clearRect(0, 0, gameArea.width, gameArea.height);
-        drawScore(context);
         
         timeCount -= refreshRate;
         
@@ -200,9 +199,13 @@ var gameEngine = (function() {
             }
         }
         
-        turret.draw(context);
-
         detectCollisions();
+        
+        turret.draw(context);
+        drawScore(context);
+        drawHealth(context);
+        drawAmmunition(context);
+        
         if (playerHealth <= 0)
         {
             stop();
@@ -236,35 +239,6 @@ var gameEngine = (function() {
             }
         }
     };
-
-    function gameover(ctx)
-    {
-        ctx.beginPath();
-        ctx.fillRect(0, 0, gameArea.width, gameArea.height);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.fillStyle="#FFFFFF";
-        ctx.font="20px Arial";
-        ctx.fillText("Game Over", gameArea.width / 2 - 38, gameArea.height / 2 + 8);
-        ctx.stroke();
-
-        setTimeout(function() {displayScore(ctx)}, 2000);
-    }
-
-    function displayScore(ctx)
-    {
-        ctx.beginPath();
-        ctx.fillStyle="#000000"
-        ctx.fillRect(0, 0, gameArea.width, gameArea.height);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.fillStyle="#FFFFFF"
-        ctx.font="20px Arial";
-        ctx.fillText("Score: " + score, gameArea.width / 2 - 38, gameArea.height / 2 + 8);
-        ctx.stroke();
-    }
     
     function generateEnemy() {
         var width = gameArea.offsetWidth;
@@ -316,20 +290,60 @@ var gameEngine = (function() {
         
     };
     
+    function gameover(ctx)
+    {
+        ctx.beginPath();
+        ctx.fillRect(0, 0, gameArea.width, gameArea.height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.fillStyle="#FFFFFF";
+        ctx.font="20px Arial";
+        ctx.fillText("Game Over", gameArea.width / 2 - 38, gameArea.height / 2 + 8);
+        ctx.stroke();
+
+        setTimeout(function() {displayScore(ctx)}, 2000);
+    }
+
+    function displayScore(ctx)
+    {
+        ctx.beginPath();
+        ctx.fillStyle="#000000"
+        ctx.fillRect(0, 0, gameArea.width, gameArea.height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.fillStyle="#FFFFFF"
+        ctx.font="20px Arial";
+        ctx.fillText("Score: " + score, gameArea.width / 2 - 38, gameArea.height / 2 + 8);
+        ctx.stroke();
+    }
+    
     function drawScore(ctx){
         ctx.beginPath();
-        ctx.font="10px Arial";
-        ctx.fillText("Score: " + score, 5, 10);
+        ctx.font="12px Arial";
+        ctx.fillText("Score: " + score, 5, 12);
         ctx.stroke();
     };
 
     function drawHealth(ctx){
+        var info = "Health:";
+        for(var i = 0; i < playerHealth; i++)
+        {
+            info += " \u25A0";
+        }
+        
         ctx.beginPath();
+        ctx.font="12px Arial";
+        ctx.fillText(info, gameArea.width - 75, 12);
         ctx.stroke();
     };
 
     function drawAmmunition(ctx){
         ctx.beginPath();
+        ctx.font="12x Arial"
+        ctx.fillText("Ammo:", gameArea.width - 75, 26);
+        ctx.fillRect(gameArea.width - 73, );
         ctx.stroke();
     };
     
