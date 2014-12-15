@@ -158,6 +158,7 @@ var gameEngine = (function() {
         intervalVar,
         playerHealth,
         ammunition,
+        maxAmmunition,
         score = 0,
         turret,
         wave = 0;
@@ -272,7 +273,8 @@ var gameEngine = (function() {
         missiles = [];
         rockets = [];
         playerHealth = 3;
-        ammunition = enemyCount * 3;
+        maxAmmunition = enemyCount * 4;
+        ammunition = maxAmmunition;
 
         var context = gameArea.getContext('2d');
         context.clearRect(0, 0, gameArea.width, gameArea.height);
@@ -340,10 +342,12 @@ var gameEngine = (function() {
     };
 
     function drawAmmunition(ctx){
+        var ammo = (ammunition / maxAmmunition) * 28; 
+
         ctx.beginPath();
         ctx.font="12x Arial"
         ctx.fillText("Ammo:", gameArea.width - 75, 26);
-        ctx.fillRect(gameArea.width - 73, );
+        ctx.fillRect(gameArea.width - 33, 20, ammo, 4);
         ctx.stroke();
     };
     
@@ -360,6 +364,7 @@ var gameEngine = (function() {
         if(ammunition > 0)
         {
             rockets.push(new Rocket(turret.tip, pos, 4));
+            ammunition--;
         }
     };
     
