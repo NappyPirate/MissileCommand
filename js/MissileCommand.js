@@ -1,10 +1,10 @@
-var gameArea = document.getElementById('game_area');
-var bezelWidth = 18;
-var bezelHeight = 23;
-gameArea.width = window.innerWidth - bezelWidth;
-gameArea.height = window.innerHeight - bezelHeight;
-
 var MissileCommand = (function() {
+    var gameArea = document.getElementById('game_area');
+    var bezelWidth = 18;
+    var bezelHeight = 23;
+    gameArea.width = window.innerWidth - bezelWidth;
+    gameArea.height = window.innerHeight - bezelHeight;
+
     var Missile = function(orig, target, speed) {
         this.start = {x: orig.x, y: orig.y};
         this.cur = {x: orig.x, y: orig.y};
