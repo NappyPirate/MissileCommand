@@ -159,6 +159,7 @@ var gameEngine = (function() {
         playerHealth,
         ammunition,
         maxAmmunition,
+        waveScore = 0,
         score = 0,
         turret,
         wave = 0;
@@ -233,7 +234,7 @@ var gameEngine = (function() {
                     var distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
                     if (distance < rocket.radius){
-                        score += 100;
+                        waveScore += 100;
                         missiles.splice(m, 1);
                     }
                 }
@@ -265,6 +266,8 @@ var gameEngine = (function() {
     
     function newWave() {
         stop();
+        score += waveScore;
+        waveScore = 0;
         wave++;
         enemyCount = wave * 5 < 50 ? wave * 5 : 50;
         enemySpeed = Math.floor(wave / 2) ? Math.floor(wave / 2) : 1;
@@ -289,7 +292,9 @@ var gameEngine = (function() {
     };
     
     function resetWave(num) {
-        
+        waveScore = 0;
+        wave--;
+        newWave();
     };
     
     function gameover(ctx)
@@ -324,7 +329,7 @@ var gameEngine = (function() {
     function drawScore(ctx){
         ctx.beginPath();
         ctx.font="12px Arial";
-        ctx.fillText("Score: " + score, 5, 12);
+        ctx.fillText("Score: " + (score + waveScore), 5, 12);
         ctx.stroke();
     };
 
