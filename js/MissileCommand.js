@@ -377,20 +377,38 @@ var MissileCommand = (function() {
    
     
     function init(){
-        function getMousePos(canvas, evt) {
-            var rect = canvas.getBoundingClientRect();
-            return {
-                x: evt.clientX - rect.left,
-                y: evt.clientY - rect.top
-            };
-        }
+        var rtime = new Date(1, 1, 2000, 12,00,00);
+        var timeout = false;
+        var delta = 200; 
     
         window.onresize = function() {
             gameArea.width = window.innerWidth - bezelWidth;
             gameArea.height = window.innerHeight - bezelHeight;
             
             GameEngine.moveTurret();
-            GameEngine.resetWave();
+
+            rtime = new Date();
+            if (timeout === false) {
+                timeout = true;
+                setTimeout(resizeend, delta);
+            }
+        }
+
+        function resizeend() {
+            if (new Date() - rtime < delta) {
+                setTimeout(resizeend, delta);
+            } else {
+                timeout = false;
+                GameEngine.resetWave();
+            }               
+        }
+
+        function getMousePos(canvas, evt) {
+            var rect = canvas.getBoundingClientRect();
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
         }
 
         gameArea.addEventListener('click', function(evt) {
